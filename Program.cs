@@ -40,60 +40,71 @@ namespace Uptime
 
             Console.WriteLine($"Pinging {string.Join(' ', targetIps)} every {pingInterval}ms");
             Console.WriteLine();
+            PrintInstructions();
             _ = uptimeMonitorer.Monitor(targetIps, pingInterval);
 
             while (true)
             {
-                Console.WriteLine("Press s to print a summary of today's results");
-                Console.WriteLine("Press t to print today's results");
-                Console.WriteLine("Press u to print results where connection was not up");
-                Console.WriteLine("Press q to quit");
-                var key = Console.ReadKey();
-                Console.WriteLine();
-                if (key.Key == ConsoleKey.S)
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Y)
                 {
-                    var startDateTime = DateTime.UtcNow.AddDays(-1);
-                    var endDateTime = DateTime.UtcNow;
-                    var results = dataStore.GetWithDateRange(startDateTime, endDateTime);
-
-                    var successfuResultCount = string.Format(
-                        "{0:n0}",
-                        results.Where(r => r.WasUp).Count()
-                    );
-                    var failedResults = results.Where(r => !r.WasUp);
-                    var startDateStr = startDateTime.ToString("yyyy-MM-ddThh:mm:ssZ");
-                    Console.Write(
-                        $"Since {startDateStr}, there have been " +
-                        $"{successfuResultCount} successful checks"
-                    );
-                    Console.WriteLine(
-                        failedResults.Any() ? " which included the following failures:" : "."
-                    );
-                    PrintResults(failedResults);
+                    // Print a summary of today's results
+                    var yesterday = DateTime.UtcNow.AddDays(-1);
+                    PrintResultsForPeriod(dataStore, yesterday, DateTime.UtcNow);
                 }
-                else if (key.Key == ConsoleKey.T)
+                else if (key.Key == ConsoleKey.W)
                 {
-                    var results = dataStore.GetWithDateRange(
-                        DateTime.UtcNow.AddDays(-1),
-                        DateTime.UtcNow
-                    );
-                    PrintResults(results);
+                    // Print a summary of this week's results
+                    var lastWeek = DateTime.UtcNow.AddDays(-8);
+                    PrintResultsForPeriod(dataStore, lastWeek, DateTime.UtcNow);
                 }
-                if (key.Key == ConsoleKey.U)
+                else if (key.Key == ConsoleKey.M)
                 {
-                    var results = dataStore.GetWithWasUpStatus(false);
-                    if (results.Count == 0)
-                    {
-                        Console.WriteLine("There have been no recorded results where a ping request was unsuccessful");
-                    }
-                    PrintResults(results);
+                    // Print a summary of this month's results
+                    var lastMonth = DateTime.UtcNow.AddMonths(-1);
+                    PrintResultsForPeriod(dataStore, lastMonth, DateTime.UtcNow);
                 }
                 else if (key.Key == ConsoleKey.Q)
                 {
                     return;
                 }
-                Console.WriteLine();
+                else
+                {
+                    Console.Error.WriteLine($"{key.Key} is not a valid input.");
+                    PrintInstructions();
+                }
             }
+        }
+
+        private static void PrintInstructions()
+        {
+            Console.WriteLine("Press y to print a summary since yesterday");
+            Console.WriteLine("Press w to print a summary since a week ago");
+            Console.WriteLine("Press m to print a summary since a month ago");
+            Console.WriteLine("Press q to quit");
+            Console.WriteLine();
+        }
+
+        private static void PrintResultsForPeriod(
+            IUptimeResultDataStore dataStore,
+            DateTime startDateTimeUtc,
+            DateTime endDateTimeUtc
+        )
+        {
+            var successfulResultCount = dataStore.GetUptimeResultsCount(
+                startDateTimeUtc,
+                endDateTimeUtc,
+                true
+            );
+            var failedResults = dataStore.GetUptimeResults(startDateTimeUtc, endDateTimeUtc, false);
+            Console.Write(
+                $"Since {startDateTimeUtc.ToString("yyyy-MM-ddThh:mm:ssZ")}, there have been " +
+                $"{ string.Format("{0:n0}", successfulResultCount)} successful checks "
+            );
+            Console.WriteLine(
+                failedResults.Any() ? "which included the following failures:" : "and no failures."
+            );
+            PrintResults(failedResults);
         }
 
         private static void PrintResults(IEnumerable<UptimeResult> results)
@@ -108,7 +119,7 @@ namespace Uptime
         {
             Console.WriteLine("Usage: NetworkUptimeMonitor.exe <interval in ms> <ip address> <ip address> <ip address>...");
             Console.WriteLine("Press the any key to continue...");
-            Console.ReadKey();
+            Console.ReadKey(true);
         }
     }
 }

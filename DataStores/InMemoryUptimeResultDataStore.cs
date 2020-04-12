@@ -5,7 +5,7 @@ using Uptime.Models;
 
 namespace Uptime
 {
-    class InMemoryUptimeResultDataStore: IUptimeResultDataStore
+    class InMemoryUptimeResultDataStore : IUptimeResultDataStore
     {
         private readonly List<UptimeResult> uptimeResults;
 
@@ -14,23 +14,29 @@ namespace Uptime
             uptimeResults = new List<UptimeResult>();
         }
 
-        public List<UptimeResult> GetWithDateRange(
+        public List<UptimeResult> GetUptimeResults(
             DateTime startDateTimeUtc,
-            DateTime endDateTimeUtc
+            DateTime endDateTimeUtc,
+            bool wasUp
         )
         {
             return uptimeResults.Where(result =>
                 result.DateTimeUtc >= startDateTimeUtc &&
-                result.DateTimeUtc <= endDateTimeUtc
+                result.DateTimeUtc <= endDateTimeUtc &&
+                result.WasUp == wasUp
             ).ToList();
         }
 
-        public List<UptimeResult> GetWithWasUpStatus(bool wasUp)
+        public int GetUptimeResultsCount(
+           DateTime startDateTimeUtc,
+           DateTime endDateTimeUtc,
+           bool wasUp
+        )
         {
-            return uptimeResults.Where(result => result.WasUp).ToList();
+            return GetUptimeResults(startDateTimeUtc, endDateTimeUtc, wasUp).Count;
         }
 
-        public void Save(UptimeResult uptimeResult)
+        public void SaveUptimeResult(UptimeResult uptimeResult)
         {
             uptimeResults.Add(uptimeResult);
         }

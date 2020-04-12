@@ -9,7 +9,7 @@ using Uptime.Models;
 
 namespace Uptime
 {
-    class SqliteUptimeResultDataStore : IUptimeResultDataStore
+    class SqliteUptimeResultDataStore: IUptimeResultDataStore
     {
         private readonly string ConnectionString;
         private readonly object DbLock;
@@ -17,7 +17,6 @@ namespace Uptime
         public SqliteUptimeResultDataStore()
         {
             var dbFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "UptimeSqliteDatabase.db");
-            Console.WriteLine($"Using database at {dbFilePath}");
             var connectionStringBuilder = new SqliteConnectionStringBuilder
             {
                 DataSource = dbFilePath
@@ -27,37 +26,78 @@ namespace Uptime
             EnsureDbExists(dbFilePath);
         }
 
-        public List<UptimeResult> GetWithDateRange(DateTime startDateTimeUtc, DateTime endDateTimeUtc)
+        public List<UptimeResult> GetUptimeResults(
+            DateTime startDateTimeUtc,
+            DateTime endDateTimeUtc,
+            bool wasUp
+        )
         {
             lock (DbLock)
                 using (var connection = new SqliteConnection(ConnectionString))
                 {
                     connection.Open();
-                    var uptimeResults = GetUptimeResultsFromDateRange(
-                        connection,
-                        startDateTimeUtc,
-                        endDateTimeUtc
-                    );
-                    AddPingResultsToUptimeResults(connection, uptimeResults);
-                    return uptimeResults;
-                }
-        }
-        public List<UptimeResult> GetWithWasUpStatus(bool wasUp)
-        {
-            lock (DbLock)
-                using (var connection = new SqliteConnection(ConnectionString))
-                {
-                    connection.Open();
-                    var uptimeResults = GetUptimeResultsFromWasUp(
-                        connection,
-                        wasUp
-                    );
-                    AddPingResultsToUptimeResults(connection, uptimeResults);
-                    return uptimeResults;
+                    const string selectUptimeResultsQuery = @"
+                        SELECT
+                            uptime_result_id,
+                            date_time_utc
+                        FROM uptime_results
+                        WHERE
+                            was_up = @wasUp
+                        AND
+                            date_time_utc BETWEEN @startDateTimeUtc AND @endDateTimeUtc;
+                    ";
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        var selectUptimeCmd = connection.CreateCommand();
+                        selectUptimeCmd.CommandText = selectUptimeResultsQuery;
+                        selectUptimeCmd.Parameters.AddWithValue(
+                            "@wasUp",
+                            wasUp ? 1 : 0
+                        );
+                        selectUptimeCmd.Parameters.AddWithValue(
+                            "@startDateTimeUtc",
+                            startDateTimeUtc
+                        );
+                        selectUptimeCmd.Parameters.AddWithValue(
+                            "@endDateTimeUtc",
+                            endDateTimeUtc
+                        );
+
+                        var uptimeResults = ReadUptimeResultsFromCommand(selectUptimeCmd);
+                        AddPingResultsToUptimeResults(connection, uptimeResults);
+                        return uptimeResults;
+                    }
                 }
         }
 
-        public void Save(UptimeResult uptimeResult)
+        public int GetUptimeResultsCount(
+            DateTime startDateTimeUtc,
+            DateTime endDateTimeUtc,
+            bool wasUp
+        )
+        {
+            lock (DbLock)
+                using (var connection = new SqliteConnection(ConnectionString))
+                {
+                    connection.Open();
+                    const string query = @"
+                        SELECT count(uptime_result_id)
+                        FROM uptime_results
+                        WHERE
+                            was_up = @wasUp
+                        AND
+                            date_time_utc BETWEEN @startDateTimeUtc AND @endDateTimeUtc;
+                    ";
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = query;
+                    cmd.Parameters.AddWithValue("@wasUp", wasUp ? "1" : "0");
+                    cmd.Parameters.AddWithValue("@startDateTimeUtc", startDateTimeUtc);
+                    cmd.Parameters.AddWithValue("@endDateTimeUtc", endDateTimeUtc);
+                    return (int)(long)cmd.ExecuteScalar();
+                }
+        }
+
+        public void SaveUptimeResult(UptimeResult uptimeResult)
         {
             lock (DbLock)
                 using (var connection = new SqliteConnection(ConnectionString))
@@ -149,65 +189,7 @@ namespace Uptime
             insertPingCmd.ExecuteNonQuery();
         }
 
-        private List<UptimeResult> GetUptimeResultsFromDateRange(
-            SqliteConnection connection,
-            DateTime startDateTimeUtc,
-            DateTime endDateTimeUtc
-        )
-        {
-            const string selectUptimeResultsQuery = @"
-                SELECT
-                    uptime_result_id,
-                    date_time_utc
-                FROM uptime_results
-                WHERE date_time_utc BETWEEN @startDateTimeUtc AND @endDateTimeUtc;
-            ";
-            using (var transaction = connection.BeginTransaction())
-            {
-                var selectUptimeCmd = connection.CreateCommand();
-                selectUptimeCmd.CommandText = selectUptimeResultsQuery;
-                selectUptimeCmd.Parameters.AddWithValue(
-                    "@startDateTimeUtc",
-                    startDateTimeUtc
-                );
-                selectUptimeCmd.Parameters.AddWithValue(
-                    "@endDateTimeUtc",
-                    endDateTimeUtc
-                );
-
-                return ReadUptimeResultsFromCommand(selectUptimeCmd);
-            }
-        }
-
-        private List<UptimeResult> GetUptimeResultsFromWasUp(
-            SqliteConnection connection,
-            bool wasUp
-        )
-        {
-            const string selectUptimeResultsQuery = @"
-                SELECT
-                    uptime_result_id,
-                    date_time_utc
-                FROM uptime_results
-                WHERE was_up = @wasUp;
-            ";
-
-            var results = new List<UptimeResult>();
-            using (var transaction = connection.BeginTransaction())
-            {
-                var selectUptimeCmd = connection.CreateCommand();
-                selectUptimeCmd.CommandText = selectUptimeResultsQuery;
-                selectUptimeCmd.Parameters.AddWithValue(
-                    "@wasUp",
-                    wasUp ? 1 : 0
-                );
-
-                var commandResults = ReadUptimeResultsFromCommand(selectUptimeCmd);
-                results.AddRange(commandResults);
-            }
-            return results;
-        }
-
+        
         private List<UptimeResult> ReadUptimeResultsFromCommand(
             SqliteCommand command
         )

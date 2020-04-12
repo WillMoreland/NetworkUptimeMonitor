@@ -44,7 +44,7 @@ namespace Uptime
             {
                 PingResults = pingResults.ToList(),
             };
-            uptimeResultDataStore.Save(uptimeCheckResult);
+            uptimeResultDataStore.SaveUptimeResult(uptimeCheckResult);
         }
     }
 }

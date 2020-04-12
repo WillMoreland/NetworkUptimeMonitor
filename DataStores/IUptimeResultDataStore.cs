@@ -6,10 +6,10 @@ namespace Uptime
 {
     public interface IUptimeResultDataStore
     {
-       List<UptimeResult> GetWithDateRange(DateTime startDateTimeUtc, DateTime endDateTimeUtc);
+        List<UptimeResult> GetUptimeResults(DateTime startDateTimeUtc, DateTime endDateTimeUtc, bool wasUp);
 
-       List<UptimeResult> GetWithWasUpStatus(bool wasUp);
+        int GetUptimeResultsCount(DateTime startDateTimeUtc, DateTime endDateTimeUtc, bool wasUp);
 
-       void Save(UptimeResult uptimeResult);
+        void SaveUptimeResult(UptimeResult uptimeResult);
     }
-} 
+}
