@@ -1,4 +1,4 @@
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 declare -a TARGET_RIDS=(
     "win10-x64"
