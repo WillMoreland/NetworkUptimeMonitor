@@ -2,7 +2,7 @@
 
 This program will ping IP addresses at a given interval and store the results in a Sqlite database. It will also display basic information about the results. I use this to see when my network connection goes down, and to try troubleshoot. For example, by pinging an IP on my network, an IP my ISP owns, and an IP on the internet, I can tell where my network failed.
 
-![screenshot of the console running NetworkUptimeMonitor.exe](./screenshot.png)
+![screenshot of the console running NetworkUptimeMonitor.exe](program-running.png)
 
 ## Getting started 💡
 1. Download a release from the [releases page(https://github.com/WillMoreland/NetworkUptimeMonitor/releases) or [compile it yourself](#compiling)
