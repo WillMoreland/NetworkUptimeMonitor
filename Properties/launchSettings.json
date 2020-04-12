@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Uptime": {
+      "commandName": "Project",
+      "commandLineArgs": "1000 1.1.1.1 14.1.33.20"
+    }
+  }
+}
