@@ -234,11 +234,10 @@ namespace Uptime
                 WHERE uptime_result_id IN ({string.Join(", ", queryParamNames)});
             ";
                 var uptimeResultIds = uptimeResultsBatch.Select(result => result.Id);
-                using (var transaction = connection.BeginTransaction())
-                {
-                    var selectUptimeCmd = connection.CreateCommand();
-                    selectUptimeCmd.CommandText = selectPingResultsQuery;
-                    uptimeResultsBatch.ForEach((result) =>
+
+                var selectUptimeCmd = connection.CreateCommand();
+                selectUptimeCmd.CommandText = selectPingResultsQuery;
+                uptimeResultsBatch.ForEach((result) =>
                 {
                     selectUptimeCmd.Parameters.AddWithValue(
                         $"@Param{result.Id}",
@@ -246,29 +245,28 @@ namespace Uptime
                     );
                 });
 
-                    using (var reader = selectUptimeCmd.ExecuteReader())
+                using (var reader = selectUptimeCmd.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        var pingResultId = reader.GetInt32(0);
+                        var uptimeResultId = reader.GetInt32(1);
+                        var dateTimeUtc = reader.GetString(2);
+                        var targetIpAddress = reader.GetString(3);
+                        var status = reader.GetInt32(4);
+                        var roundTripTime = reader.GetInt32(5);
+                        var pingResult = new PingResult
                         {
-                            var pingResultId = reader.GetInt32(0);
-                            var uptimeResultId = reader.GetInt32(1);
-                            var dateTimeUtc = reader.GetString(2);
-                            var targetIpAddress = reader.GetString(3);
-                            var status = reader.GetInt32(4);
-                            var roundTripTime = reader.GetInt32(5);
-                            var pingResult = new PingResult
-                            {
-                                Id = uptimeResultId,
-                                DateTimeUtc = DateTime.Parse(dateTimeUtc),
-                                TargetIpAddress = targetIpAddress,
-                                Status = (IPStatus)status,
-                                RoundTripTime = roundTripTime,
-                            };
-                            var uptimeResult = uptimeResultsBatch
-                                .Where(result => result.Id == uptimeResultId)
-                                .FirstOrDefault();
-                            uptimeResult.PingResults.Add(pingResult);
-                        }
+                            Id = uptimeResultId,
+                            DateTimeUtc = DateTime.Parse(dateTimeUtc),
+                            TargetIpAddress = targetIpAddress,
+                            Status = (IPStatus)status,
+                            RoundTripTime = roundTripTime,
+                        };
+                        var uptimeResult = uptimeResultsBatch
+                            .Where(result => result.Id == uptimeResultId)
+                            .FirstOrDefault();
+                        uptimeResult.PingResults.Add(pingResult);
                     }
                 }
             }
