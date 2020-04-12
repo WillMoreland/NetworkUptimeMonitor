@@ -12,9 +12,9 @@ This program will ping IP addresses at a given interval and store the results in
 There is more data being stored than what is being surfaced in the program, and it can be easily accessed by [downloading an SQLite client](https://www.sqlite.org/download.html) and executing some SQL on the database file using the tables below for reference.
 
 ## Compiling 🔨
-1. Install the [].NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+1. Install the [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.1)
 1. Have git installed
-1. Clone this repository with `git clone <FIX-ME>`
+1. Clone this repository
 1. Find the [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog) for your environment. For example, if you're wanting to run this on a 64 bit version of Windows 10, use `win10-64`.
 1. Run this command from within the repository `dotnet publish -r <RID> -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true` replacing `<RID>` with the runtime identifier from the above step
 1. Check the output of the above command to find your compiled executable!
