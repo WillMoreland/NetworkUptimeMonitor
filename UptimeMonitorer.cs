@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using NetworkUptimeMonitor.Models;
+using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using Uptime.Models;
 
@@ -33,14 +33,18 @@ namespace Uptime
 
         private async Task PingAddresses(IEnumerable<string> targetAddresses)
         {
-            const int PING_TIMEOUT_MS = 5000;
-            var pingRequests = targetAddresses.Select(targetAddress =>
-                new Ping().SendPingAsync(targetAddress, PING_TIMEOUT_MS)).ToList();
-            var pingReplies = await Task.WhenAll(pingRequests);
+            var pingRequestTasks = targetAddresses.Select(targetAddress =>
+                PingRequest.Send(targetAddress));
+            var pingRequests = await Task.WhenAll(pingRequestTasks);
 
-            var pingResults = pingReplies.Select(pingReply =>
-                new PingResult(pingReply.Address.ToString(), pingReply.Status, (int)pingReply.RoundtripTime));
-            var uptimeCheckResult = new UptimeResult
+            var pingResults = pingRequests.Select(pingRequest =>
+                new PingResult(
+                    pingRequest.TargetIpAddress,
+                    pingRequest.PingReply.Status,
+                    (int)pingRequest.PingReply.RoundtripTime
+                )
+            );
+            var uptimeCheckResult = new UptimeResult 
             {
                 PingResults = pingResults.ToList(),
             };
