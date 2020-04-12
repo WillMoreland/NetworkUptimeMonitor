@@ -56,11 +56,19 @@ namespace Uptime
                     var endDateTime = DateTime.UtcNow;
                     var results = dataStore.GetWithDateRange(startDateTime, endDateTime);
 
-                    var numSuccessfulResults = results.Where(r => r.WasUp).Count();
+                    var successfuResultCount = string.Format(
+                        "{0:n0}",
+                        results.Where(r => r.WasUp).Count()
+                    );
                     var failedResults = results.Where(r => !r.WasUp);
-                    Console.Write($"Since {startDateTime.ToString("o")}, there have been " +
-                        $"{numSuccessfulResults} successful checks");
-                    Console.WriteLine(failedResults.Any() ? " which included the following failures:" : ".");
+                    var startDateStr = startDateTime.ToString("yyyy-MM-ddThh:mm:ssZ");
+                    Console.Write(
+                        $"Since {startDateStr}, there have been " +
+                        $"{successfuResultCount} successful checks"
+                    );
+                    Console.WriteLine(
+                        failedResults.Any() ? " which included the following failures:" : "."
+                    );
                     PrintResults(failedResults);
                 }
                 else if (key.Key == ConsoleKey.T)
