@@ -6,6 +6,8 @@ declare -a TARGET_RIDS=(
     "linux-x64"
 )
 
+rm -r ./bin/*
+
 for RID in "${TARGET_RIDS[@]}"
 do
     dotnet publish -r $RID -c Release //p:PublishSingleFile=true //p:PublishTrimmed=true -o ./bin
