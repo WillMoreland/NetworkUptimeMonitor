@@ -30,50 +30,50 @@ namespace Uptime
         public List<UptimeResult> GetWithDateRange(DateTime startDateTimeUtc, DateTime endDateTimeUtc)
         {
             lock (DbLock)
-            using (var connection = new SqliteConnection(ConnectionString))
-            {
-                connection.Open();
-                var uptimeResults = GetUptimeResultsFromDateRange(
-                    connection,
-                    startDateTimeUtc,
-                    endDateTimeUtc
-                );
-                AddPingResultsToUptimeResults(connection, uptimeResults);
-                return uptimeResults;
-            }
+                using (var connection = new SqliteConnection(ConnectionString))
+                {
+                    connection.Open();
+                    var uptimeResults = GetUptimeResultsFromDateRange(
+                        connection,
+                        startDateTimeUtc,
+                        endDateTimeUtc
+                    );
+                    AddPingResultsToUptimeResults(connection, uptimeResults);
+                    return uptimeResults;
+                }
         }
         public List<UptimeResult> GetWithWasUpStatus(bool wasUp)
         {
             lock (DbLock)
-            using (var connection = new SqliteConnection(ConnectionString))
-            {
-                connection.Open();
-                var uptimeResults = GetUptimeResultsFromWasUp(
-                    connection,
-                    wasUp
-                );
-                AddPingResultsToUptimeResults(connection, uptimeResults);
-                return uptimeResults;
-            }
+                using (var connection = new SqliteConnection(ConnectionString))
+                {
+                    connection.Open();
+                    var uptimeResults = GetUptimeResultsFromWasUp(
+                        connection,
+                        wasUp
+                    );
+                    AddPingResultsToUptimeResults(connection, uptimeResults);
+                    return uptimeResults;
+                }
         }
 
         public void Save(UptimeResult uptimeResult)
         {
             lock (DbLock)
-            using (var connection = new SqliteConnection(ConnectionString))
-            {
-                connection.Open();
-                using (var transaction = connection.BeginTransaction())
+                using (var connection = new SqliteConnection(ConnectionString))
                 {
-                    var uptimeResultId = InsertUptimeResult(connection, uptimeResult);
-
-                    foreach (var pingResult in uptimeResult.PingResults)
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        InsertPingResult(pingResult, connection, uptimeResultId);
+                        var uptimeResultId = InsertUptimeResult(connection, uptimeResult);
+
+                        foreach (var pingResult in uptimeResult.PingResults)
+                        {
+                            InsertPingResult(pingResult, connection, uptimeResultId);
+                        }
+                        transaction.Commit();
                     }
-                    transaction.Commit();
                 }
-            }
         }
 
         private void EnsureDbExists(string dbFilePath)
@@ -91,13 +91,13 @@ namespace Uptime
             var createTablesSqlFile = new StreamReader(sqlFileStream).ReadToEnd();
 
             lock (DbLock)
-            using(var connection = new SqliteConnection(ConnectionString))
-            {
-                connection.Open();
-                var command = connection.CreateCommand();
-                command.CommandText = createTablesSqlFile;
-                command.ExecuteNonQuery();
-            }
+                using (var connection = new SqliteConnection(ConnectionString))
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = createTablesSqlFile;
+                    command.ExecuteNonQuery();
+                }
         }
 
         private static void InsertPingResult(
@@ -234,8 +234,13 @@ namespace Uptime
             List<UptimeResult> uptimeResults
         )
         {
-            var queryParamNames = uptimeResults.Select(result => $"@Param{result.Id}");
-            var selectPingResultsQuery = @$"
+            var batchSize = 999;
+            for (var i = 0; i < uptimeResults.Count; i += batchSize)
+            {
+                var rangeEnd = Math.Min(batchSize, uptimeResults.Count - i);
+                var uptimeResultsBatch = uptimeResults.GetRange(i, rangeEnd);
+                var queryParamNames = uptimeResultsBatch.Select(result => $"@Param{result.Id}");
+                var selectPingResultsQuery = @$"
                 SELECT
                     ping_result_id,
                     uptime_result_id,
@@ -246,12 +251,12 @@ namespace Uptime
                 FROM ping_results
                 WHERE uptime_result_id IN ({string.Join(", ", queryParamNames)});
             ";
-            var uptimeResultIds = uptimeResults.Select(result => result.Id);
-            using (var transaction = connection.BeginTransaction())
-            {
-                var selectUptimeCmd = connection.CreateCommand();
-                selectUptimeCmd.CommandText = selectPingResultsQuery;
-                uptimeResults.ForEach((result) =>
+                var uptimeResultIds = uptimeResultsBatch.Select(result => result.Id);
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var selectUptimeCmd = connection.CreateCommand();
+                    selectUptimeCmd.CommandText = selectPingResultsQuery;
+                    uptimeResultsBatch.ForEach((result) =>
                 {
                     selectUptimeCmd.Parameters.AddWithValue(
                         $"@Param{result.Id}",
@@ -259,28 +264,29 @@ namespace Uptime
                     );
                 });
 
-                using (var reader = selectUptimeCmd.ExecuteReader())
-                {
-                    while (reader.Read())
+                    using (var reader = selectUptimeCmd.ExecuteReader())
                     {
-                        var pingResultId = reader.GetInt32(0);
-                        var uptimeResultId = reader.GetInt32(1);
-                        var dateTimeUtc = reader.GetString(2);
-                        var targetIpAddress = reader.GetString(3);
-                        var status = reader.GetInt32(4);
-                        var roundTripTime = reader.GetInt32(5);
-                        var pingResult = new PingResult
+                        while (reader.Read())
                         {
-                            Id = uptimeResultId,
-                            DateTimeUtc = DateTime.Parse(dateTimeUtc),
-                            TargetIpAddress = targetIpAddress,
-                            Status = (IPStatus)status,
-                            RoundTripTime = roundTripTime,
-                        };
-                        var uptimeResult = uptimeResults
-                            .Where(result => result.Id == uptimeResultId)
-                            .FirstOrDefault();
-                        uptimeResult.PingResults.Add(pingResult);
+                            var pingResultId = reader.GetInt32(0);
+                            var uptimeResultId = reader.GetInt32(1);
+                            var dateTimeUtc = reader.GetString(2);
+                            var targetIpAddress = reader.GetString(3);
+                            var status = reader.GetInt32(4);
+                            var roundTripTime = reader.GetInt32(5);
+                            var pingResult = new PingResult
+                            {
+                                Id = uptimeResultId,
+                                DateTimeUtc = DateTime.Parse(dateTimeUtc),
+                                TargetIpAddress = targetIpAddress,
+                                Status = (IPStatus)status,
+                                RoundTripTime = roundTripTime,
+                            };
+                            var uptimeResult = uptimeResultsBatch
+                                .Where(result => result.Id == uptimeResultId)
+                                .FirstOrDefault();
+                            uptimeResult.PingResults.Add(pingResult);
+                        }
                     }
                 }
             }
