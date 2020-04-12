@@ -5,7 +5,7 @@ This program will ping IP addresses at a given interval and store the results in
 ![screenshot of the console running NetworkUptimeMonitor.exe](program-running.png)
 
 ## Getting started 💡
-1. Download a release from the [releases page(https://github.com/WillMoreland/NetworkUptimeMonitor/releases) or [compile it yourself](#compiling)
+1. Download a release from the [releases page](https://github.com/WillMoreland/NetworkUptimeMonitor/releases) or [compile it yourself](#Compiling)
 1. Run it like `NetworkUptimeMonitor.exe 1000 1.1.1.1 8.8.8.8` to check 1.1.1.1 and 8.8.8.8 every 1000 milliseconds. The program will use the database in `./Data/UptimeSqliteDatabase.db` or create one if it doesn't already exist.
 
 ## Reading into the data 🔍
