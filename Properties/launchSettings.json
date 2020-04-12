@@ -2,7 +2,7 @@
   "profiles": {
     "Uptime": {
       "commandName": "Project",
-      "commandLineArgs": "1000 1.1.1.1 14.1.33.20"
+      "commandLineArgs": "1000 192.168.1.1 14.1.33.20 1.1.1.1"
     }
   }
 }
