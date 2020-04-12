@@ -99,10 +99,15 @@ namespace Uptime
             var failedResults = dataStore.GetUptimeResults(startDateTimeUtc, endDateTimeUtc, false);
             Console.Write(
                 $"Since {startDateTimeUtc.ToString("yyyy-MM-ddThh:mm:ssZ")}, there have been " +
-                $"{ string.Format("{0:n0}", successfulResultCount)} successful checks "
+                $"{string.Format("{0:n0}", successfulResultCount)} successful checks "
             );
             Console.WriteLine(
-                failedResults.Any() ? "which included the following failures:" : "and no failures."
+                failedResults.Any() ?
+                    $"which included the following " +
+                    $"{string.Format("{0:n0}", failedResults.Count)} " +
+                    "failures:"
+                :
+                    "and no failures."
             );
             PrintResults(failedResults);
         }
