@@ -1,11 +1,11 @@
 # Network Uptime Monitor
 
-This program will ping IP addresses at a given interval and store the results in a Sqlite database. It will also display basic information about the results. I use this to see when my network connection goes down, and to try troubleshoot. For example, by pinging an IP on my network, an IP my ISP owns, and an IP on the internet, I can tell where my network failed.
+This program will ping IP addresses at a given interval and store the results in a SQLite database. It will also display basic information about the results. I use this to see when my network connection goes down, and to try troubleshoot. For example, by pinging an IP on my network, an IP my ISP owns, and an IP on the internet, I can tell where my network failed.
 
 ![screenshot of the console running NetworkUptimeMonitor.exe](program-running.png)
 
 ## Getting started 💡
-1. Download a release from the [releases page](https://github.com/WillMoreland/NetworkUptimeMonitor/releases) or [compile it yourself](#Compiling)
+1. Download a release from the [releases page](https://github.com/un1r8okq/NetworkUptimeMonitor/releases) or [compile it yourself](#Compiling)
 1. Run it like `NetworkUptimeMonitor.exe 1000 1.1.1.1 8.8.8.8` to check 1.1.1.1 and 8.8.8.8 every 1000 milliseconds. The program will use the database in `./Data/UptimeSqliteDatabase.db` or create one if it doesn't already exist.
 
 ## Reading into the data 🔍
@@ -20,7 +20,7 @@ There is more data being stored than what is being surfaced in the program, and 
 1. Check the output of the above command to find your compiled executable!
 
 ## Database tables 📚
-This program uses the following tables in `./Data/UptimeSqliteDatabase.db`:
+This program uses the following tables in `./NetworkUptimeMonitor/Data/UptimeSqliteDatabase.db`:
 
 ### uptime_results
 | Column           | DataType | Description |
@@ -40,5 +40,4 @@ This program uses the following tables in `./Data/UptimeSqliteDatabase.db`:
 | round_trip_time   | INTEGER  | The RTT of the ping request in milliseconds                                            |
 
 ## Contributing ❤
-
 You'd be the first, but go ahead and open a PR! 🎉❤
