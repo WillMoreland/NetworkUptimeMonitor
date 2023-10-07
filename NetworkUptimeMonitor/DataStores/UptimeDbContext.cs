@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Uptime.Models;
+using NetworkUptimeMonitor.Models;
 
-namespace Uptime.DataStores
+namespace NetworkUptimeMonitor.DataStores
 {
     class UptimeDbContext: DbContext
     {

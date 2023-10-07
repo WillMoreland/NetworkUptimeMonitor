@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Uptime.Models;
+using NetworkUptimeMonitor.Models;
 
-namespace Uptime
+namespace NetworkUptimeMonitor
 {
     public interface IUptimeResultDataStore
     {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Uptime.Models;
+using NetworkUptimeMonitor.Models;
 
-namespace Uptime
+namespace NetworkUptimeMonitor
 {
     class InMemoryUptimeResultDataStore : IUptimeResultDataStore
     {

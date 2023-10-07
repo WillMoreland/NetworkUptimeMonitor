@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Uptime.Models;
+using NetworkUptimeMonitor.Models;
 
-namespace Uptime
+namespace NetworkUptimeMonitor
 {
     class Program
     {
@@ -35,7 +35,7 @@ namespace Uptime
                 }
             }
 
-            var dataStore = new SqliteUptimeResultDataStore();
+            var dataStore = new SqliteUptimeResultDataStore(StorageMode.File);
             var uptimeMonitorer = new UptimeMonitorer(dataStore);
 
             Console.WriteLine($"Pinging {string.Join(' ', targetIps)} every {pingInterval}ms");
