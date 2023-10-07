@@ -1,3 +1,3 @@
-VERSION="1.3.0"
-BIN_DIR="./bin/"
+VERSION="1.4.1"
+BIN_DIR="./NetworkUptimeMonitor/bin/"
 APP_NAME="NetworkUptimeMonitor"

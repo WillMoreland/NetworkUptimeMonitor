@@ -1,9 +1,9 @@
 source ./ci/env.sh
 
 declare -a TARGET_RIDS=(
-    "win10-x64"
-    # "linux-arm"
-    # "linux-x64"
+    "win-x64"
+    "linux-arm"
+    "linux-x64"
 )
 
 rm -r $BIN_DIR/*

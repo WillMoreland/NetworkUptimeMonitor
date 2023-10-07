@@ -15,7 +15,7 @@ There is more data being stored than what is being surfaced in the program, and 
 1. Install the [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 1. Have git installed
 1. Clone this repository
-1. Find the [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog) for your environment. For example, if you're wanting to run this on a 64 bit version of Windows 10, use `win10-64`.
+1. Find the [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog) for your environment. For example, if you're wanting to run this on a 64 bit version of Windows, use `win-64`.
 1. Run this command from within the repository `dotnet publish -r <RID> -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true` replacing `<RID>` with the runtime identifier from the above step
 1. Check the output of the above command to find your compiled executable!
 
