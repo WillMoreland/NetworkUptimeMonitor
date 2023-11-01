@@ -48,7 +48,7 @@ namespace NetworkUptimeMonitor
                         date_time_utc BETWEEN @startDateTimeUtc AND @endDateTimeUtc;
                 ";
                 using var transaction = _conn.BeginTransaction();
-                var selectUptimeCmd = _conn.CreateCommand();
+                using var selectUptimeCmd = _conn.CreateCommand();
                 selectUptimeCmd.CommandText = selectUptimeResultsQuery;
                 selectUptimeCmd.Parameters.AddWithValue(
                     "@wasUp",
@@ -85,7 +85,7 @@ namespace NetworkUptimeMonitor
                     AND
                         date_time_utc BETWEEN @startDateTimeUtc AND @endDateTimeUtc;
                 ";
-                var cmd = _conn.CreateCommand();
+                using var cmd = _conn.CreateCommand();
                 cmd.CommandText = query;
                 cmd.Parameters.AddWithValue("@wasUp", wasUp ? "1" : "0");
                 cmd.Parameters.AddWithValue("@startDateTimeUtc", startDateTimeUtc);
@@ -140,7 +140,7 @@ namespace NetworkUptimeMonitor
 
             lock (_dbLock)
             {
-                var command = _conn.CreateCommand();
+                using var command = _conn.CreateCommand();
                 command.CommandText = createTablesSqlFile;
                 command.ExecuteNonQuery();
             }
@@ -170,7 +170,7 @@ namespace NetworkUptimeMonitor
                     @RoundTripTime
                 );
             ";
-            var insertPingCmd = connection.CreateCommand();
+            using var insertPingCmd = connection.CreateCommand();
             insertPingCmd.CommandText = insertPingResultQuery;
             insertPingCmd.Parameters.AddWithValue(
                 "@uptimeResultId",
@@ -195,25 +195,23 @@ namespace NetworkUptimeMonitor
             insertPingCmd.ExecuteNonQuery();
         }
 
-        
         private List<UptimeResult> ReadUptimeResultsFromCommand(
             SqliteCommand command
         )
         {
             var results = new List<UptimeResult>();
-            using (var reader = command.ExecuteReader())
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                while (reader.Read())
+                var id = reader.GetInt32(0);
+                var dateTimeUtc = reader.GetString(1);
+                results.Add(new UptimeResult
                 {
-                    var id = reader.GetInt32(0);
-                    var dateTimeUtc = reader.GetString(1);
-                    results.Add(new UptimeResult
-                    {
-                        Id = id,
-                        DateTimeUtc = DateTime.Parse(dateTimeUtc)
-                    });
-                }
+                    Id = id,
+                    DateTimeUtc = DateTime.Parse(dateTimeUtc)
+                });
             }
+
             return results;
         }
 
@@ -241,7 +239,7 @@ namespace NetworkUptimeMonitor
             ";
                 var uptimeResultIds = uptimeResultsBatch.Select(result => result.Id);
 
-                var selectUptimeCmd = connection.CreateCommand();
+                using var selectUptimeCmd = connection.CreateCommand();
                 selectUptimeCmd.CommandText = selectPingResultsQuery;
                 uptimeResultsBatch.ForEach((result) =>
                 {
@@ -251,29 +249,27 @@ namespace NetworkUptimeMonitor
                     );
                 });
 
-                using (var reader = selectUptimeCmd.ExecuteReader())
+                using var reader = selectUptimeCmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    var pingResultId = reader.GetInt32(0);
+                    var uptimeResultId = reader.GetInt32(1);
+                    var dateTimeUtc = reader.GetString(2);
+                    var targetIpAddress = reader.GetString(3);
+                    var status = reader.GetInt32(4);
+                    var roundTripTime = reader.GetInt32(5);
+                    var pingResult = new PingResult
                     {
-                        var pingResultId = reader.GetInt32(0);
-                        var uptimeResultId = reader.GetInt32(1);
-                        var dateTimeUtc = reader.GetString(2);
-                        var targetIpAddress = reader.GetString(3);
-                        var status = reader.GetInt32(4);
-                        var roundTripTime = reader.GetInt32(5);
-                        var pingResult = new PingResult
-                        {
-                            Id = uptimeResultId,
-                            DateTimeUtc = DateTime.Parse(dateTimeUtc),
-                            TargetIpAddress = targetIpAddress,
-                            Status = (IPStatus)status,
-                            RoundTripTime = roundTripTime,
-                        };
-                        var uptimeResult = uptimeResultsBatch
-                            .Where(result => result.Id == uptimeResultId)
-                            .FirstOrDefault();
-                        uptimeResult.PingResults.Add(pingResult);
-                    }
+                        Id = uptimeResultId,
+                        DateTimeUtc = DateTime.Parse(dateTimeUtc),
+                        TargetIpAddress = targetIpAddress,
+                        Status = (IPStatus)status,
+                        RoundTripTime = roundTripTime,
+                    };
+                    var uptimeResult = uptimeResultsBatch
+                        .Where(result => result.Id == uptimeResultId)
+                        .FirstOrDefault();
+                    uptimeResult.PingResults.Add(pingResult);
                 }
             }
         }
@@ -288,7 +284,7 @@ namespace NetworkUptimeMonitor
                 VALUES (@DateTimeUtc, @WasUp);
                 SELECT last_insert_rowid();
             ";
-            var insertUptimeCmd = connection.CreateCommand();
+            using var insertUptimeCmd = connection.CreateCommand();
             insertUptimeCmd.CommandText = insertUptimeResultQuery;
             insertUptimeCmd.Parameters.AddWithValue(
                 "@DateTimeUtc",

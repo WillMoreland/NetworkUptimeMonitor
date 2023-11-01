@@ -35,7 +35,7 @@ namespace NetworkUptimeMonitor
                 }
             }
 
-            var dataStore = new SqliteUptimeResultDataStore(StorageMode.File);
+            using var dataStore = new SqliteUptimeResultDataStore(StorageMode.File);
             var uptimeMonitorer = new UptimeMonitorer(dataStore);
 
             Console.WriteLine($"Pinging {string.Join(' ', targetIps)} every {pingInterval}ms");
