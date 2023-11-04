@@ -29,6 +29,8 @@ This program uses the following tables in `./NetworkUptimeMonitor/Data/UptimeSql
 | date_time_utc    | TEXT     | An ISO8601 representation of a UTC timestamp e.g. 2020-04-12T03:52:00Z |
 | was_up           | INTEGER  | This is a denormalised binary value that indicates if any of the ping requests were unsuccessful. It is denormalised to improve performance so that you don't have to query every ping request to see if an uptime result was down. |
 
+Index: `idx_uptime_results_was_up_date_time_utc` on `was_up` and `date_time_utc`. This exists because the most common query is on both `date_time_utc` and `was_up`.
+
 ### ping_results
 | Column            | DataType | Description                                                                            |
 | ----------------- | -------- | -------------------------------------------------------------------------------------- |
@@ -38,6 +40,8 @@ This program uses the following tables in `./NetworkUptimeMonitor/Data/UptimeSql
 | target_ip_address | TEXT     | The IP address that had a ping request sent to it                                      |
 | status            | INTEGER  | The integer representation of the [IPStatus Enum](https://docs.microsoft.com/en-us/dotnet/api/system.net.networkinformation.ipstatus?view=netframework-4.8) that shows the status of the ping result |
 | round_trip_time   | INTEGER  | The RTT of the ping request in milliseconds                                            |
+
+Index: `idx_ping_results_uptime_result_id` on `uptime_result_id`. This exists because the most common query is to pill all ping results for a given `uptime_result_id`.
 
 ## Contributing ❤
 You'd be the first, but go ahead and open a PR! 🎉❤
