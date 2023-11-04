@@ -78,7 +78,7 @@ namespace NetworkUptimeMonitor
             lock (_dbLock)
             {
                 const string query = @"
-                    SELECT count(uptime_result_id)
+                    SELECT count(*)
                     FROM uptime_results
                     WHERE
                         was_up = @wasUp
