@@ -4,6 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <StartWorkingDirectory>$(MSBuildProjectDirectory)</StartWorkingDirectory>
+	<PublishSingleFile>true</PublishSingleFile>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<SelfContained>true</SelfContained>
   </PropertyGroup>
   
   <ItemGroup>
